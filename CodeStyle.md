@@ -1,4 +1,4 @@
-#代码规范
+# 代码规范
 ## 命名
 - [命名网站](https://unbug.github.io/codelf/)
 - 一定不能用拼音
