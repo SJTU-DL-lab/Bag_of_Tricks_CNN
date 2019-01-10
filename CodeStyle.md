@@ -42,8 +42,8 @@
 	    """
 	    return request('get', url, qsargs=qsargs, timeout=timeout)
 
-        ### 可读性非常重要
+### 可读性非常重要
 
-        - 最好不要用缩写
-        - 不要怕参数名太长
-        - 多加注释
+- 最好不要用缩写
+- 不要怕参数名太长
+- 多加注释
