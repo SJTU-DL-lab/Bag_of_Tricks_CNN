@@ -6,4 +6,6 @@ If you want to participant in this project, please fork and commit the code.
 ## For collaborators and people who fork:   
 Please read the [CodeStyle.md](https://github.com/SJTU-DL-lab/Bag_of_Tricks_CNN/blob/master/CodeStyle.md) first!  
 Please read the [CodeStyle.md](https://github.com/SJTU-DL-lab/Bag_of_Tricks_CNN/blob/master/CodeStyle.md) first!    
-Please read the [CodeStyle.md](https://github.com/SJTU-DL-lab/Bag_of_Tricks_CNN/blob/master/CodeStyle.md) first!     
+Please read the [CodeStyle.md](https://github.com/SJTU-DL-lab/Bag_of_Tricks_CNN/blob/master/CodeStyle.md) first!    
+
+See the [project board](https://github.com/orgs/SJTU-DL-lab/projects/1) to see what you can do and claim some work.
