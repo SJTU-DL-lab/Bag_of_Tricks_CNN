@@ -10,12 +10,12 @@ class Bottleneck(nn.Module):
         mid_channels = in_channels // 2
 
         if downsample and tweak_type == 'A':
-            self.residual = [
+            self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1, 2),
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU()
-                            ]
-            self.bottleneck = [
+                            )
+            self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 2),
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
@@ -25,15 +25,15 @@ class Bottleneck(nn.Module):
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
                                nn.BatchNorm2d(out_channels),
                                nn.ReLU()
-                              ]
+                              )
 
         elif downsample and tweak_type == 'B':
-            self.residual = [
+            self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1, 2),
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU()
-                            ]
-            self.bottleneck = [
+                            )
+            self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 1),
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
@@ -43,16 +43,16 @@ class Bottleneck(nn.Module):
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
                                nn.BatchNorm2d(out_channels),
                                nn.ReLU()
-                              ]
+                              )
 
         elif downsample and (tweak_type == 'D' or tweak_type == 'E'):
-            self.residual = [
+            self.residual = nn.Sequential(
                             nn.AvgPool2d(2, 2),
                             nn.Conv2d(in_channels, out_channels, 1, 1),
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU()
-                            ]
-            self.bottleneck = [
+                            )
+            self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 1),
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
@@ -62,15 +62,15 @@ class Bottleneck(nn.Module):
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
                                nn.BatchNorm2d(out_channels),
                                nn.ReLU()
-                              ]
+                              )
 
         else:
-            self.residual = [
+            self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1),
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU()
-                            ]
-            self.bottleneck = [
+                            )
+            self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 1),
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
@@ -80,11 +80,11 @@ class Bottleneck(nn.Module):
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
                                nn.BatchNorm2d(out_channels),
                                nn.ReLU()
-                              ]
+                              )
 
     def forward(self, x):
-        output = nn.Sequential(*self.bottleneck)(x)
-        residual_x = nn.Sequential(*self.residual)(x)
+        output = self.bottleneck(x)
+        residual_x = self.residual(x)
         output += residual_x
 
         return output
@@ -96,7 +96,7 @@ class Resnet50(nn.Module):
         super(Resnet50, self).__init__()
 
         if tweak_type == 'C' or tweak_type == 'E':
-            self.downsample = [
+            self.downsample = nn.Sequential(
                               nn.Conv2d(in_channels, 32, 3, 2, 1),
                               nn.BatchNorm2d(32),
                               nn.ReLU(),
@@ -107,22 +107,20 @@ class Resnet50(nn.Module):
                               nn.BatchNorm2d(64),
                               nn.ReLU(),
                               nn.MaxPool2d(3, 2, 1)
-                              ]
-            self.downsample = nn.Sequential(*(self.downsample))
+                              )
+
         else:
-            self.downsample = [
+            self.downsample = nn.Sequential(
                               nn.Conv2d(in_channels, out_channels=64,
                                         kernel_size=7, stride=2, padding=3),
                               nn.BatchNorm2d(64),
                               nn.ReLU(),
                               nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-                              ]
-            self.downsample = nn.Sequential(*(self.downsample))
+                              )
 
-
-        self.stages  = self.stage_block(Bottleneck, 64, 256, 3, False, tweak_type)  # stage1
-        self.stages += self.stage_block(Bottleneck, 256, 512, 4, tweak_type)  # stage2
-        self.stages += self.stage_block(Bottleneck, 512, 1024, 6, tweak_type)  # stage3
+        self.stages = self.stage_block(Bottleneck, 64, 256, 3, False, tweak_type)  # stage1
+        self.stages += self.stage_block(Bottleneck, 256, 512, 4, tweak_type)   # stage2
+        self.stages += self.stage_block(Bottleneck, 512, 1024, 6, tweak_type)   # stage3
         self.stages += self.stage_block(Bottleneck, 1024, 2048, 3, tweak_type)  # stage4
 
         self.stages = nn.Sequential(*self.stages)
