@@ -4,6 +4,8 @@ Resnet:https://arxiv.org/abs/1812.01187
 
 More CNN models implemented by keras for cifar could be found from https://github.com/BIGBALLON/cifar-10-cnn
 
-Train base line Resnet model (done) accuracy: 91.5%(+/- 0.2%)
+Train base line Resnet model (done) accuracy: 91.64%
 
-Adding cosine decay(on progress)
+Adding Learningrate WarmUp (on progress)
+
+Addinf cosine decay(on progress)
