@@ -31,10 +31,10 @@ NUM_CLASSES = 10
 WIDTH = 32
 HEIGHT = 32
 BATCH_SIZE = 256       #decrease the number if you run out your GPU memory
-EPOCHES = 160
+EPOCHES = 200
 ITERATIONS = 50000//BATCH_SIZE +1
 WEIGHT_DECAY = 1e-4           #according to the paper
-
+FILE_PATH = "/cluster/home/it_stu25/dllab/model/best_model.h5"
 
 def residual_block(x, filters, increase=False):
     stride = (1, 1)
@@ -97,9 +97,9 @@ def color_preprocessing(x_train, x_test):
     return x_train, x_test
 
 def scheduler(epoch):
-    if epoch < 71:
+    if epoch < 81:
         return 0.1
-    if epoch < 112:
+    if epoch < 122:
         return 0.01
     return 0.001
 
@@ -117,8 +117,8 @@ if __name__ == '__main__':
     #other optimizers may achieve better performance
     sgd = optimizers.SGD(lr=0.1, momentum=0.9, nesterov=True)     #according the paper
     resnet.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy'])
-
-    cbks = [LearningRateScheduler(schedule=scheduler)]
+    checkpoint = ModelCheckpoint(FILE_PATH, monitor='val_acc', verbose=1, save_best_only=True,mode='max')
+    cbks = [LearningRateScheduler(schedule=scheduler),checkpoint]
     datagen = ImageDataGenerator(horizontal_flip=True,
                                  width_shift_range=0.125,
                                  height_shift_range=0.125,
@@ -126,13 +126,10 @@ if __name__ == '__main__':
     datagen.fit(x_train)
 
     resnet.fit_generator(datagen.flow(x_train,y_train,batch_size=BATCH_SIZE),
-                         steps_per_epoch=ITERATIONS,
+                         steps_per_epoch=ITERATIONS,shuffle=1,
                          epochs=EPOCHES,
                          callbacks=cbks,
                          validation_data=(x_test,y_test))
-
-
-    resnet.save("resnet_baseline.h5")
 
 
 
