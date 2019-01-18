@@ -92,42 +92,28 @@ class Bottleneck(nn.Module):
 
 class Resnet50(nn.Module):
 
-    def __init__(self, in_channels=3, num_classes=10, input_size=224, tweak_type='A'):
+    def __init__(self, stage_channels=[16, 32, 64],
+                 in_channels=3, num_classes=10,
+                 input_size=32, tweak_type='A'):
         super(Resnet50, self).__init__()
 
-        if tweak_type == 'C' or tweak_type == 'E':
-            self.downsample = nn.Sequential(
-                              nn.Conv2d(in_channels, 32, 3, 2, 1),
-                              nn.BatchNorm2d(32),
-                              nn.ReLU(),
-                              nn.Conv2d(32, 32, 3, 1, 1),
-                              nn.BatchNorm2d(32),
-                              nn.ReLU(),
-                              nn.Conv2d(32, 64, 3, 1, 1),
-                              nn.BatchNorm2d(64),
-                              nn.ReLU(),
-                              nn.MaxPool2d(3, 2, 1)
-                              )
+        self.first_layer = nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1)
+        self.stages = []
+        stage_channels.insert(0, in_channels)
 
-        else:
-            self.downsample = nn.Sequential(
-                              nn.Conv2d(in_channels, out_channels=64,
-                                        kernel_size=7, stride=2, padding=3),
-                              nn.BatchNorm2d(64),
-                              nn.ReLU(),
-                              nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-                              )
-
-        self.stages = self.stage_block(Bottleneck, 64, 256, 3, False, tweak_type)  # stage1
-        self.stages += self.stage_block(Bottleneck, 256, 512, 4, tweak_type)   # stage2
-        self.stages += self.stage_block(Bottleneck, 512, 1024, 6, tweak_type)   # stage3
-        self.stages += self.stage_block(Bottleneck, 1024, 2048, 3, tweak_type)  # stage4
+        for i in range(len(stage_channels)-1):
+            if i == 0:
+                downsample = False
+            else:
+                downsample = True
+            self.stages += self.stage_block(Bottleneck, stage_channels[i],
+                                            stage_channels[i+1], 18, downsample,
+                                            tweak_type)
 
         self.stages = nn.Sequential(*self.stages)
 
-        self.avg_pool = nn.AvgPool2d(7, 1)
-        downsample_size = input_size // 2 ** 5 - 6
-        self.fc = nn.Linear(2048 * downsample_size ** 2, num_classes)
+        self.avg_pool = nn.AvgPool2d(input_size, 1)
+        self.fc = nn.Linear(stage_channels[-1], num_classes)
 
     def stage_block(self, model_block, in_channels, out_channels,
                     num_repeat, downsample=True, tweak_type='A'):
@@ -138,7 +124,7 @@ class Resnet50(nn.Module):
         return stage
 
     def forward(self, x):
-        x = self.downsample(x)
+        x = self.first_layer(x)
         x = self.stages(x)
         x = self.avg_pool(x)
         x = x.view(x.size(0), -1)
