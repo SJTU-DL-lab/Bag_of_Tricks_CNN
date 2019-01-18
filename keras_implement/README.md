@@ -8,4 +8,4 @@ Train base line Resnet model (done) accuracy: 91.64%
 
 Adding Learningrate WarmUp (done) accuracy:92.32% (+0.68%)
 
-Addinf cosine decay(on progress)
+Adding cosine decay(on progress)
