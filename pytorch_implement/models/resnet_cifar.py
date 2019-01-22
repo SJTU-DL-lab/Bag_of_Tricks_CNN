@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class Bottleneck(nn.Module):
+class BuildingBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels, downsample=False, tweak_type='A'):
         super(Bottleneck, self).__init__()
-        mid_channels = in_channels // 2
+        # mid_channels = in_channels // 2
 
         if downsample and tweak_type == 'A':
             self.residual = nn.Sequential(
@@ -15,35 +15,32 @@ class Bottleneck(nn.Module):
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU()
                             )
-            self.bottleneck = nn.Sequential(
-                               nn.Conv2d(in_channels, mid_channels, 1, 2),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, mid_channels, 3, 1, 1),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, out_channels, 1, 1),
+            self.build_block = nn.Sequential(
+                               nn.Conv2d(in_channels, out_channels, 3, 2, 1),
                                nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
+                               nn.ReLU(),
+                               nn.Conv2d(out_channels, out_channels, 3, 1, 1),
+                               nn.BatchNorm2d(out_channels),
+                               nn.ReLU(),
                               )
 
-        elif downsample and tweak_type == 'B':
-            self.residual = nn.Sequential(
-                            nn.Conv2d(in_channels, out_channels, 1, 2),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
-                            )
-            self.bottleneck = nn.Sequential(
-                               nn.Conv2d(in_channels, mid_channels, 1, 1),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, mid_channels, 3, 2, 1),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, out_channels, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
-                              )
+        # elif downsample and tweak_type == 'B':
+        #     self.residual = nn.Sequential(
+        #                     nn.Conv2d(in_channels, out_channels, 1, 2),
+        #                     nn.BatchNorm2d(out_channels),
+        #                     nn.ReLU()
+        #                     )
+        #     self.build_block = nn.Sequential(
+        #                        nn.Conv2d(in_channels, mid_channels, 1, 1),
+        #                        nn.BatchNorm2d(mid_channels),
+        #                        nn.ReLU(),
+        #                        nn.Conv2d(mid_channels, mid_channels, 3, 2, 1),
+        #                        nn.BatchNorm2d(mid_channels),
+        #                        nn.ReLU(),
+        #                        nn.Conv2d(mid_channels, out_channels, 1, 1),
+        #                        nn.BatchNorm2d(out_channels),
+        #                        nn.ReLU()
+        #                       )
 
         elif downsample and (tweak_type == 'D' or tweak_type == 'E'):
             self.residual = nn.Sequential(
@@ -52,16 +49,13 @@ class Bottleneck(nn.Module):
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU()
                             )
-            self.bottleneck = nn.Sequential(
-                               nn.Conv2d(in_channels, mid_channels, 1, 1),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, mid_channels, 3, 2, 1),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, out_channels, 1, 1),
+            self.build_block = nn.Sequential(
+                               nn.Conv2d(in_channels, out_channels, 3, 2, 1),
                                nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
+                               nn.ReLU(),
+                               nn.Conv2d(out_channels, out_channels, 3, 1, 1),
+                               nn.BatchNorm2d(out_channels),
+                               nn.ReLU(),
                               )
 
         else:
@@ -70,16 +64,13 @@ class Bottleneck(nn.Module):
                             nn.BatchNorm2d(out_channels),
                             nn.ReLU()
                             )
-            self.bottleneck = nn.Sequential(
-                               nn.Conv2d(in_channels, mid_channels, 1, 1),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, mid_channels, 3, 1, 1),
-                               nn.BatchNorm2d(mid_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(mid_channels, out_channels, 1, 1),
+            self.build_block = nn.Sequential(
+                               nn.Conv2d(in_channels, out_channels, 3, 1, 1),
                                nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
+                               nn.ReLU(),
+                               nn.Conv2d(out_channels, out_channels, 3, 1, 1),
+                               nn.BatchNorm2d(out_channels),
+                               nn.ReLU(),
                               )
 
     def forward(self, x):
@@ -99,7 +90,7 @@ class Resnet50(nn.Module):
 
         self.first_layer = nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1)
         self.stages = []
-        stage_channels.insert(0, in_channels)
+        stage_channels.insert(0, stage_channels[0])
 
         for i in range(len(stage_channels)-1):
             if i == 0:
@@ -112,7 +103,7 @@ class Resnet50(nn.Module):
 
         self.stages = nn.Sequential(*self.stages)
 
-        self.avg_pool = nn.AvgPool2d(input_size, 1)
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(stage_channels[-1], num_classes)
 
     def stage_block(self, model_block, in_channels, out_channels,

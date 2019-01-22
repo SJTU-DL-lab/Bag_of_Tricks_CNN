@@ -126,7 +126,7 @@ class Resnet50(nn.Module):
 
         self.stages = nn.Sequential(*self.stages)
 
-        self.avg_pool = nn.AvgPool2d(7, 1)
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(2048, num_classes)
 
     def stage_block(self, model_block, in_channels, out_channels,
