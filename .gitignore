@@ -108,3 +108,9 @@ dataset/
 
 # model and summary
 .pkl
+
+# sic bash
+sic_bash/
+
+# summary
+pytorch_implement/summary

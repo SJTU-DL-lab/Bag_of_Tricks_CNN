@@ -4,6 +4,8 @@ from torch.utils.data import DataLoader
 import sys
 import datetime
 import time
+import copy
+import os
 import pickle as pkl
 import torchvision
 from torchvision.datasets import CIFAR10
@@ -11,7 +13,7 @@ import torchvision.transforms as transforms
 from models.resnet_cifar import Resnet50
 from models.network_util import get_scheduler, init_net
 from tensorboardX import SummaryWriter
-import configs.base_config
+from configs.base_config import args
 
 data_transform = {
     'train': transforms.Compose([
@@ -45,12 +47,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Resnet50(args.stage_channels, args.in_channels,
                  args.num_classes, args.tweak_type,
                  args.num_repeat)
-model = init_net(model, gpu_ids=args.gpu_ids)
-# model.to(device)
+model = init_net(model, init_type=args.init_type,
+                 init_gain=args.init_gain, gpu_ids=args.gpu_ids)
+model.to(device)
 
 loss_func = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(),
-                            lr=args.lr
+                            lr=args.lr,
                             momentum=args.momentum,
                             weight_decay=args.weight_decay)
 lr_scheduler = get_scheduler(optimizer, args)
@@ -88,15 +91,16 @@ for ep in range(args.epoch):
                     loss.backward()
                     optimizer.step()
 
+            step_corrects = torch.sum(y_pred == y.data)
             running_loss += loss.item() * X.size(0)
-            running_corrects += torch.sum(y_pred == y.data)
+            running_corrects += step_corrects
             if stage is 'train':
                 writer.add_scalar('train/running_loss', loss.item(), num_iters)
-                writer.add_scalar('train/running_acc', running_corrects / args.batch_size, num_iters)
+                writer.add_scalar('train/running_acc', step_corrects.double() / args.batch_size, num_iters)
             num_iters += 1
 
         epoch_loss = running_loss / len(dataloader[stage].dataset)
-        epoch_acc = running_corrects / len(dataloader[stage].dataset)
+        epoch_acc = running_corrects.double() / len(dataloader[stage].dataset)
         writer.add_scalar('{}/epoch_loss'.format(stage), epoch_loss, ep+1)
         writer.add_scalar('{}/epoch_acc'.format(stage), epoch_acc, ep+1)
 
@@ -107,8 +111,8 @@ for ep in range(args.epoch):
             best_model_wts = copy.deepcopy(model.state_dict())
 
 time_elapsed = time.time() - since
-print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed//3600, // 60, time_elapsed % 60))
+print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed // 3600, time_elapsed // 60, time_elapsed % 60))
 print('Best val Acc: {:4f}'.format(best_acc))
 
-with open(os.path.join(args.summary_dir, 'model_bestValACC_{:.3f}.pkl'.format(best_acc)), 'rb') as f:
+with open(os.path.join(args.summary_dir, 'model_bestValACC_{:.3f}.pkl'.format(best_acc)), 'wb') as f:
     pkl.dump(best_model_wts, f)
