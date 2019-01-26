@@ -1,6 +1,7 @@
 import argparse
 import os
 import datetime
+import torch
 
 time_now = datetime.datetime.now()
 time_str = '{}-{}-{}'.format(str(time_now.date()), time_now.hour, time_now.minute)
@@ -28,6 +29,9 @@ parser.add_argument("--tweak_type", type=str, default='A')
 parser.add_argument("--dataset", default='cifar', choices=['cifar', 'imagenet'])
 args = parser.parse_args()
 
+parser.add_argument("--summary_dir", type=str, default='./summary/resnet50_{}_{}'.format(args.dataset, time_str))
+args = parser.parse_args()
+
 # set gpu ids
 str_ids = args.gpu_ids.split(',')
 args.gpu_ids = []
@@ -37,9 +41,6 @@ for str_id in str_ids:
         args.gpu_ids.append(id)
 if len(args.gpu_ids) > 0:
     torch.cuda.set_device(args.gpu_ids[0])
-
-parser.add_argument("--summary_dir", type=str, default='./summary/resnet50_{}_{}'.format(args.dataset, time_str))
-args = parser.parse_args()
 
 
 def print_argsions(args):

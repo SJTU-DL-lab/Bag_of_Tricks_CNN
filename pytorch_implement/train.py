@@ -49,7 +49,6 @@ model = Resnet50(args.stage_channels, args.in_channels,
                  args.num_repeat)
 model = init_net(model, init_type=args.init_type,
                  init_gain=args.init_gain, gpu_ids=args.gpu_ids)
-model.to(device)
 
 loss_func = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(),
