@@ -64,6 +64,7 @@ num_iters = 1
 since = time.time()
 
 for ep in range(args.epoch):
+    print()
     print("epoch {}/{}".format(ep+1, args.epoch))
     print("-" * 10)
     lr_scheduler.step()
