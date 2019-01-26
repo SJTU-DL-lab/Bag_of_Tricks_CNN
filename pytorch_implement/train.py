@@ -1,0 +1,112 @@
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+import sys
+import datetime
+import time
+import pickle as pkl
+import torchvision
+from torchvision.datasets import CIFAR10
+import torchvision.transforms as transforms
+from models.resnet_cifar import Resnet50
+from models.network_util import get_scheduler, init_net
+from tensorboardX import SummaryWriter
+import configs.base_config
+
+data_transform = {
+    'train': transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(args.input_size, 4),
+        transforms.ToTensor()
+    ]),
+    'test': transforms.Compose([
+        transforms.ToTensor()
+    ])
+}
+
+dataset = {
+    'train': CIFAR10('../dataset/', train=True,
+                     transform=data_transform['train']),
+    'test': CIFAR10('../dataset/', train=False,
+                    transform=data_transform['test'])
+    }
+
+dataloader = {x: DataLoader(dataset[x],
+                            batch_size=args.batch_size,
+                            shuffle=args.shuffle) for x in ['train', 'test']}
+
+writer = SummaryWriter(log_dir=args.summary_dir)
+with open(os.path.join(args.summary_dir, 'args.pkl'), 'wb') as f:
+    pkl.dump(args, f)
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+model = Resnet50(args.stage_channels, args.in_channels,
+                 args.num_classes, args.tweak_type,
+                 args.num_repeat)
+model = init_net(model, gpu_ids=args.gpu_ids)
+# model.to(device)
+
+loss_func = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(),
+                            lr=args.lr
+                            momentum=args.momentum,
+                            weight_decay=args.weight_decay)
+lr_scheduler = get_scheduler(optimizer, args)
+
+val_acc_history = []
+best_model_wts = copy.deepcopy(model.state_dict())
+best_acc = 0.0
+num_iters = 1
+since = time.time()
+
+for ep in range(args.epoch):
+    print("epoch {}/{}".format(ep+1, args.epoch))
+    print("-" * 10)
+    lr_scheduler.step()
+
+    for stage in ['train', 'test']:
+        if stage is 'train':
+            model.train()
+        else:
+            model.eval()
+        running_loss = 0.0
+        running_corrects = 0.0
+
+        for i, (X, y) in enumerate(dataloader[stage]):
+            X = X.to(device)
+            y = y.to(device)
+            optimizer.zero_grad()
+
+            with torch.set_grad_enabled(stage == 'train'):
+                y_score = model(X)
+                loss = loss_func(y_score, y)
+                _, y_pred = torch.max(y_score, 1)
+
+                if stage is 'train':
+                    loss.backward()
+                    optimizer.step()
+
+            running_loss += loss.item() * X.size(0)
+            running_corrects += torch.sum(y_pred == y.data)
+            if stage is 'train':
+                writer.add_scalar('train/running_loss', loss.item(), num_iters)
+                writer.add_scalar('train/running_acc', running_corrects / args.batch_size, num_iters)
+            num_iters += 1
+
+        epoch_loss = running_loss / len(dataloader[stage].dataset)
+        epoch_acc = running_corrects / len(dataloader[stage].dataset)
+        writer.add_scalar('{}/epoch_loss'.format(stage), epoch_loss, ep+1)
+        writer.add_scalar('{}/epoch_acc'.format(stage), epoch_acc, ep+1)
+
+        print('{} Loss: {:.4f}, acc: {:.4f}'.format(stage, epoch_loss, epoch_acc))
+
+        if stage is 'test' and epoch_acc > best_acc:
+            best_acc = epoch_acc
+            best_model_wts = copy.deepcopy(model.state_dict())
+
+time_elapsed = time.time() - since
+print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed//3600, // 60, time_elapsed % 60))
+print('Best val Acc: {:4f}'.format(best_acc))
+
+with open(os.path.join(args.summary_dir, 'model_bestValACC_{:.3f}.pkl'.format(best_acc)), 'rb') as f:
+    pkl.dump(best_model_wts, f)

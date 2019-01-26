@@ -5,23 +5,22 @@ import torch.nn.functional as F
 
 class BuildingBlock(nn.Module):
 
-    def __init__(self, in_channels, out_channels, downsample=False, tweak_type='A'):
-        super(Bottleneck, self).__init__()
+    def __init__(self, in_channels, out_channels,
+                 downsample=False, tweak_type='A'):
+        super(BuildingBlock, self).__init__()
         # mid_channels = in_channels // 2
-
+        self.relu = nn.ReLU()
         if downsample and tweak_type == 'A':
             self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1, 2),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
+                            nn.BatchNorm2d(out_channels)
                             )
             self.build_block = nn.Sequential(
                                nn.Conv2d(in_channels, out_channels, 3, 2, 1),
                                nn.BatchNorm2d(out_channels),
                                nn.ReLU(),
                                nn.Conv2d(out_channels, out_channels, 3, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU(),
+                               nn.BatchNorm2d(out_channels)
                               )
 
         # elif downsample and tweak_type == 'B':
@@ -46,37 +45,34 @@ class BuildingBlock(nn.Module):
             self.residual = nn.Sequential(
                             nn.AvgPool2d(2, 2),
                             nn.Conv2d(in_channels, out_channels, 1, 1),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
+                            nn.BatchNorm2d(out_channels)
                             )
             self.build_block = nn.Sequential(
                                nn.Conv2d(in_channels, out_channels, 3, 2, 1),
                                nn.BatchNorm2d(out_channels),
                                nn.ReLU(),
                                nn.Conv2d(out_channels, out_channels, 3, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU(),
+                               nn.BatchNorm2d(out_channels)
                               )
 
         else:
             self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
+                            nn.BatchNorm2d(out_channels)
                             )
             self.build_block = nn.Sequential(
                                nn.Conv2d(in_channels, out_channels, 3, 1, 1),
                                nn.BatchNorm2d(out_channels),
                                nn.ReLU(),
                                nn.Conv2d(out_channels, out_channels, 3, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU(),
+                               nn.BatchNorm2d(out_channels)
                               )
 
     def forward(self, x):
-        output = self.bottleneck(x)
+        output = self.build_block(x)
         residual_x = self.residual(x)
         output += residual_x
+        output = self.relu(output)
 
         return output
 
@@ -84,11 +80,16 @@ class BuildingBlock(nn.Module):
 class Resnet50(nn.Module):
 
     def __init__(self, stage_channels=[16, 32, 64],
-                 in_channels=3, num_classes=10,
-                 input_size=32, tweak_type='A'):
+                 in_channels=3, num_classes=10, tweak_type='A',
+                 num_repeat=9):
         super(Resnet50, self).__init__()
 
-        self.first_layer = nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1)
+        self.first_layer = nn.Sequential(
+                           nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1),
+                           nn.BatchNorm2d(stage_channels[0]),
+                           nn.ReLU()
+                           )
+
         self.stages = []
         stage_channels.insert(0, stage_channels[0])
 
@@ -97,8 +98,8 @@ class Resnet50(nn.Module):
                 downsample = False
             else:
                 downsample = True
-            self.stages += self.stage_block(Bottleneck, stage_channels[i],
-                                            stage_channels[i+1], 18, downsample,
+            self.stages += self.stage_block(BuildingBlock, stage_channels[i],
+                                            stage_channels[i+1], num_repeat, downsample,
                                             tweak_type)
 
         self.stages = nn.Sequential(*self.stages)

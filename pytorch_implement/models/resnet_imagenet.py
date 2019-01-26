@@ -8,12 +8,11 @@ class Bottleneck(nn.Module):
     def __init__(self, in_channels, out_channels, downsample=False, tweak_type='A'):
         super(Bottleneck, self).__init__()
         mid_channels = in_channels // 2
-
+        self.relu = nn.ReLU()
         if downsample and tweak_type == 'A':
             self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1, 2),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
+                            nn.BatchNorm2d(out_channels)
                             )
             self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 2),
@@ -23,15 +22,13 @@ class Bottleneck(nn.Module):
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
+                               nn.BatchNorm2d(out_channels)
                               )
 
         elif downsample and tweak_type == 'B':
             self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1, 2),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
+                            nn.BatchNorm2d(out_channels)
                             )
             self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 1),
@@ -41,16 +38,14 @@ class Bottleneck(nn.Module):
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
+                               nn.BatchNorm2d(out_channels)
                               )
 
         elif downsample and (tweak_type == 'D' or tweak_type == 'E'):
             self.residual = nn.Sequential(
                             nn.AvgPool2d(2, 2),
                             nn.Conv2d(in_channels, out_channels, 1, 1),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
+                            nn.BatchNorm2d(out_channels)
                             )
             self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 1),
@@ -60,15 +55,13 @@ class Bottleneck(nn.Module):
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
+                               nn.BatchNorm2d(out_channels)
                               )
 
         else:
             self.residual = nn.Sequential(
                             nn.Conv2d(in_channels, out_channels, 1),
-                            nn.BatchNorm2d(out_channels),
-                            nn.ReLU()
+                            nn.BatchNorm2d(out_channels)
                             )
             self.bottleneck = nn.Sequential(
                                nn.Conv2d(in_channels, mid_channels, 1, 1),
@@ -78,14 +71,14 @@ class Bottleneck(nn.Module):
                                nn.BatchNorm2d(mid_channels),
                                nn.ReLU(),
                                nn.Conv2d(mid_channels, out_channels, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU()
+                               nn.BatchNorm2d(out_channels)
                               )
 
     def forward(self, x):
         output = self.bottleneck(x)
         residual_x = self.residual(x)
         output += residual_x
+        output = self.relu(self.relu)
 
         return output
 
