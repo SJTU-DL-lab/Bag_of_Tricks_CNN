@@ -27,10 +27,10 @@ data_transform = {
 }
 
 dataset = {
-    'train': CIFAR10('../dataset/', train=True,
+    'train': CIFAR10(args.dataroot, train=True,
                      transform=data_transform['train'],
                      download=True),
-    'test': CIFAR10('../dataset/', train=False,
+    'test': CIFAR10(args.dataroot, train=False,
                     transform=data_transform['test'],
                     download=True)
     }
