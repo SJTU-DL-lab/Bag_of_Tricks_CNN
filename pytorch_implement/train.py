@@ -26,9 +26,11 @@ data_transform = {
 
 dataset = {
     'train': CIFAR10('../dataset/', train=True,
-                     transform=data_transform['train']),
+                     transform=data_transform['train'],
+                     download=True),
     'test': CIFAR10('../dataset/', train=False,
-                    transform=data_transform['test'])
+                    transform=data_transform['test'],
+                    download=True)
     }
 
 dataloader = {x: DataLoader(dataset[x],
