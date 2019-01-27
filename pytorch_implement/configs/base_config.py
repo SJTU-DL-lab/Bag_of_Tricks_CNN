@@ -3,8 +3,7 @@ import os
 import datetime
 import torch
 
-time_now = datetime.datetime.now()
-time_str = '{}-{}-{}'.format(str(time_now.date()), time_now.hour, time_now.minute)
+
 parser = argparse.ArgumentParser(description="Initialize parameters")
 
 parser.add_argument("--dataroot", required=True, help='path to images')
@@ -27,10 +26,15 @@ parser.add_argument("--num_repeat", type=int, default=9, help="the repeat number
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--tweak_type", type=str, default='A')
 parser.add_argument("--dataset", default='cifar', choices=['cifar', 'imagenet'])
+parser.add_argument("--summary_dir", type=str, default='./summary/resnet50')
+parser.add_argument("--add_stamp", action='store_true')
 args = parser.parse_args()
 
-parser.add_argument("--summary_dir", type=str, default='./summary/resnet50_{}_{}'.format(args.dataset, time_str))
-args = parser.parse_args()
+# add dataset and time stamp to summary dir
+if args.add_stamp:
+    time_now = datetime.datetime.now()
+    time_str = '{}-{}-{}'.format(str(time_now.date()), time_now.hour, time_now.minute)
+    args.summary_dir += '_{}_{}'.format(args.dataset, time_str)
 
 # set gpu ids
 str_ids = args.gpu_ids.split(',')
