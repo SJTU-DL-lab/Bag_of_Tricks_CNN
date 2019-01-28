@@ -20,10 +20,13 @@ data_transform = {
     'train': transforms.Compose([
         transforms.RandomHorizontalFlip(),
         transforms.RandomCrop(args.input_size, 4),
-        transforms.ToTensor()
+        transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
+        transforms.ToTensor(),
+        transforms.Normalize([0.49139961, 0.48215843, 0.44653216], [0.24703216, 0.2434851 , 0.26158745])
     ]),
     'test': transforms.Compose([
-        transforms.ToTensor()
+        transforms.ToTensor(),
+        transforms.Normalize([0.49139961, 0.48215843, 0.44653216], [0.24703216, 0.2434851 , 0.26158745])
     ])
 }
 
