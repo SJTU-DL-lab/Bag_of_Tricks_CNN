@@ -47,24 +47,3 @@ for str_id in str_ids:
         args.gpu_ids.append(id)
 if len(args.gpu_ids) > 0:
     torch.cuda.set_device(args.gpu_ids[0])
-
-
-def print_argsions(args):
-    message = ''
-    message += '----------------- argsions ---------------\n'
-    for k, v in sorted(vars(args).items()):
-        comment = ''
-        default = self.parser.get_default(k)
-        if v != default:
-            comment = '\t[default: %s]' % str(default)
-        message += '{:>25}: {:<30}{}\n'.format(str(k), str(v), comment)
-    message += '----------------- End -------------------'
-    print(message)
-
-    # save to the disk
-    expr_dir = os.path.join(args.checkpoints_dir, args.name)
-    util.mkdirs(expr_dir)
-    file_name = os.path.join(expr_dir, 'args.txt')
-    with open(file_name, 'wt') as args_file:
-        args_file.write(message)
-        args_file.write('\n')
