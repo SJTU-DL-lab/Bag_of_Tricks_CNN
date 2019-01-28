@@ -57,7 +57,7 @@ optimizer = torch.optim.SGD(model.parameters(),
                             momentum=args.momentum,
                             weight_decay=args.weight_decay)
 if args.lr_warmup_type is not None:
-    lr_lambda = lambda num: args.lr / args.lr_warmup_iters * num
+    lr_lambda = lambda num: (num+1) / args.lr_warmup_iters if num <= args.lr_warmup_iters else args.lr_warmup_iters
     lr_scheduler_warmup = lr_scheduler.LambdaLR(optimizer, lr_lambda)
 lr_scheduler = get_scheduler(optimizer, args)
 
@@ -71,13 +71,13 @@ for ep in range(args.epoch):
     print()
     print("epoch {}/{}".format(ep+1, args.epoch))
     print("-" * 10)
-    if args.lr_warmup_type is 'epoch' and ep < args.lr_warmup_iters:
+    if args.lr_warmup_type == 'epoch' and ep < args.lr_warmup_iters:
         lr_scheduler_warmup.step()
     else:
         lr_scheduler.step()
 
     for stage in ['train', 'test']:
-        if stage is 'train':
+        if stage == 'train':
             model.train()
         else:
             model.eval()
@@ -94,20 +94,20 @@ for ep in range(args.epoch):
                 loss = loss_func(y_score, y)
                 _, y_pred = torch.max(y_score, 1)
 
-                if stage is 'train':
+                if stage == 'train':
+                    if args.lr_warmup_type == 'iter' and num_iters <= args.lr_warmup_iters:
+                        lr_scheduler_warmup.step()
                     loss.backward()
                     optimizer.step()
-                    if args.lr_warmup_type is 'iter':
-                        lr_scheduler_warmup.step()
 
             step_corrects = torch.sum(y_pred == y.data)
             running_loss += loss.item() * X.size(0)
             running_corrects += step_corrects
-            if stage is 'train':
+            if stage == 'train':
                 writer.add_scalar('train/running_loss', loss.item(), num_iters)
                 writer.add_scalar('train/running_acc', step_corrects.double() / args.batch_size, num_iters)
                 writer.add_scalar('train/lr', optimizer.param_groups[0]['lr'], num_iters)
-            num_iters += 1
+                num_iters += 1
 
         epoch_loss = running_loss / len(dataloader[stage].dataset)
         epoch_acc = running_corrects.double() / len(dataloader[stage].dataset)
@@ -116,7 +116,7 @@ for ep in range(args.epoch):
 
         print('{} Loss: {:.4f}, acc: {:.4f}'.format(stage, epoch_loss, epoch_acc))
 
-        if stage is 'test' and epoch_acc > best_acc:
+        if stage == 'test' and epoch_acc > best_acc:
             best_acc = epoch_acc
             best_model_wts = copy.deepcopy(model.state_dict())
 
