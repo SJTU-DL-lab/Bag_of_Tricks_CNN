@@ -73,7 +73,7 @@ for ep in range(args.epoch):
     print("-" * 10)
     if args.lr_warmup_type == 'epoch' and ep < args.lr_warmup_iters:
         lr_scheduler_warmup.step()
-    else:
+    elif args.lr_decay_type == 'epoch':
         lr_scheduler.step()
 
     for stage in ['train', 'test']:
@@ -97,6 +97,8 @@ for ep in range(args.epoch):
                 if stage == 'train':
                     if args.lr_warmup_type == 'iter' and num_iters <= args.lr_warmup_iters:
                         lr_scheduler_warmup.step()
+                    elif args.lr_decay_type == 'iter':
+                        lr_scheduler.step()
                     loss.backward()
                     optimizer.step()
 
