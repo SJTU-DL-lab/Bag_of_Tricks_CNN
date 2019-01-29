@@ -56,6 +56,15 @@ def init_weights(net, zero_gamma=False, init_type='normal', gain=0.02):
                 raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
             if hasattr(m, 'bias') and m.bias is not None:
                 init.constant_(m.bias.data, 0.0)
+
+        if zero_gamma:
+            if hasattr(m, 'bn2'):
+                init.constant_(m.bn2.weight.data, 0.0)
+                init.constant_(m.bn2.bias.data, 0.0)
+            elif classname.find('BatchNorm2d') != -1:
+                init.normal_(m.weight.data, 1.0, gain)
+                init.constant_(m.bias.data, 0.0)
+
         elif classname.find('BatchNorm2d') != -1:
             if zero_gamma:
                 init.constant_(m.weight.data, 0.0)

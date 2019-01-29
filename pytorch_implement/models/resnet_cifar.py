@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from collections import OrderedDict
 
 
 class BuildingBlock(nn.Module):
@@ -12,15 +13,19 @@ class BuildingBlock(nn.Module):
         self.relu = nn.ReLU()
         if downsample and tweak_type == 'A':
             self.residual = nn.Sequential(
-                            nn.Conv2d(in_channels, out_channels, 1, 2),
-                            nn.BatchNorm2d(out_channels)
+                            OrderedDict([
+                                ('res_conv', nn.Conv2d(in_channels, out_channels, 1, 2)),
+                                ('res_bn', nn.BatchNorm2d(out_channels))
+                                        ])
                             )
             self.build_block = nn.Sequential(
-                               nn.Conv2d(in_channels, out_channels, 3, 2, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(out_channels, out_channels, 3, 1, 1),
-                               nn.BatchNorm2d(out_channels)
+                               OrderedDict([
+                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 2, 1)),
+                                   ('bn1', nn.BatchNorm2d(out_channels)),
+                                   ('relu1', nn.ReLU()),
+                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1)),
+                                   ('bn2', nn.BatchNorm2d(out_channels))
+                                           ])
                               )
 
         # elif downsample and tweak_type == 'B':
@@ -43,29 +48,38 @@ class BuildingBlock(nn.Module):
 
         elif downsample and (tweak_type == 'D' or tweak_type == 'E'):
             self.residual = nn.Sequential(
-                            nn.AvgPool2d(2, 2),
-                            nn.Conv2d(in_channels, out_channels, 1, 1),
-                            nn.BatchNorm2d(out_channels)
+                            OrderedDict([
+                                ('res_avgPool', nn.AvgPool2d(2, 2)),
+                                ('res_conv', nn.Conv2d(in_channels, out_channels, 1, 1)),
+                                ('res_bn', nn.BatchNorm2d(out_channels))
+                                        ])
                             )
             self.build_block = nn.Sequential(
-                               nn.Conv2d(in_channels, out_channels, 3, 2, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(out_channels, out_channels, 3, 1, 1),
-                               nn.BatchNorm2d(out_channels)
+                               OrderedDict([
+                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 2, 1)),
+                                   ('bn1', nn.BatchNorm2d(out_channels)),
+                                   ('relu1', nn.ReLU()),
+                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1)),
+                                   ('bn2', nn.BatchNorm2d(out_channels))
+                                           ])
                               )
 
         else:
             self.residual = nn.Sequential(
-                            nn.Conv2d(in_channels, out_channels, 1),
-                            nn.BatchNorm2d(out_channels)
-                            )
+                                OrderedDict([
+                                    ('res_conv', nn.Conv2d(in_channels, out_channels, 1)),
+                                    ('res_bn', nn.BatchNorm2d(out_channels))
+                                            ])
+                                         )
+
             self.build_block = nn.Sequential(
-                               nn.Conv2d(in_channels, out_channels, 3, 1, 1),
-                               nn.BatchNorm2d(out_channels),
-                               nn.ReLU(),
-                               nn.Conv2d(out_channels, out_channels, 3, 1, 1),
-                               nn.BatchNorm2d(out_channels)
+                               OrderedDict([
+                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 1, 1)),
+                                   ('bn1', nn.BatchNorm2d(out_channels)),
+                                   ('relu1', nn.ReLU()),
+                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1)),
+                                   ('bn2', nn.BatchNorm2d(out_channels))
+                                           ])
                               )
 
     def forward(self, x):
