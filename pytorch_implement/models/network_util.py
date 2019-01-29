@@ -40,7 +40,7 @@ def get_scheduler(optimizer, opt):
     return scheduler
 
 
-def init_weights(net, args, init_type='normal', gain=0.02):
+def init_weights(net, zero_gamma=False, init_type='normal', gain=0.02):
     def init_func(m):
         classname = m.__class__.__name__
         if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
@@ -57,7 +57,7 @@ def init_weights(net, args, init_type='normal', gain=0.02):
             if hasattr(m, 'bias') and m.bias is not None:
                 init.constant_(m.bias.data, 0.0)
         elif classname.find('BatchNorm2d') != -1:
-            if args.zero_gamma:
+            if zero_gamma:
                 init.constant_(m.weight.data, 0.0)
                 init.constant_(m.bias.data, 0.0)
             else:
@@ -68,10 +68,11 @@ def init_weights(net, args, init_type='normal', gain=0.02):
     net.apply(init_func)
 
 
-def init_net(net, args, init_type='normal', init_gain=0.02, gpu_ids=[]):
+def init_net(net, args):
+    gpu_ids = args.gpu_ids
     if len(gpu_ids) > 0:
         assert(torch.cuda.is_available())
         net.to(gpu_ids[0])
         net = torch.nn.DataParallel(net, gpu_ids)
-    init_weights(net, args, init_type, gain=init_gain)
+    init_weights(net, args.zero_gamma, args.init_type, gain=args.init_gain)
     return net

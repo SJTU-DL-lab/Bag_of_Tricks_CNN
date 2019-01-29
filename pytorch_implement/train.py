@@ -51,8 +51,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Resnet50(args.stage_channels, args.in_channels,
                  args.num_classes, args.tweak_type,
                  args.num_repeat)
-model = init_net(model, init_type=args.init_type,
-                 init_gain=args.init_gain, gpu_ids=args.gpu_ids)
+model = init_net(model, args)
 
 loss_func = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(),
