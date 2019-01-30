@@ -41,7 +41,7 @@ dataset = {
 
 dataloader = {x: DataLoader(dataset[x],
                             batch_size=args.batch_size,
-                            shuffle=args.shuffle) for x in ['train', 'test']}
+                            shuffle=~args.no_shuffle) for x in ['train', 'test']}
 
 writer = SummaryWriter(log_dir=args.summary_dir)
 with open(os.path.join(args.summary_dir, 'args.pkl'), 'wb') as f:
