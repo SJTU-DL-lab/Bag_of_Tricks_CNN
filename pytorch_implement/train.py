@@ -12,7 +12,7 @@ import torchvision
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
 from models.resnet_cifar import Resnet50
-from models.network_util import get_scheduler, init_net
+from models.network_util import get_scheduler, init_net, add_noBiasWeightDecay
 from tensorboardX import SummaryWriter
 from configs.base_config import args
 
@@ -53,26 +53,14 @@ model = Resnet50(args.stage_channels, args.in_channels,
                  args.num_repeat)
 model = init_net(model, args)
 if args.no_bias_decay:
-    bn_params = []
-    without_bn_params = []
-    for name, param in model.named_parameters():
-        if name.find('bn') != -1:
-            bn_params.append(param.data)
-        else:
-            without_bn_params.append(param.data)
-
-    optimizer = torch.optim.SGD([
-                                {'params': bn_params},
-                                {'params': without_bn_params}
-                                ],
-                                lr=args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    params = add_noBiasWeightDecay(model, ['bn'])
 else:
-    optimizer = torch.optim.SGD(model.parameters(),
-                                lr=args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    params = model.parameters()
+
+optimizer = torch.optim.SGD(params,
+                            lr=args.lr,
+                            momentum=args.momentum,
+                            weight_decay=args.weight_decay)
 
 loss_func = nn.CrossEntropyLoss()
 if args.lr_warmup_type is not None:

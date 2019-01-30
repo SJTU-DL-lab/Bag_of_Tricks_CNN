@@ -99,9 +99,11 @@ class Resnet50(nn.Module):
         super(Resnet50, self).__init__()
 
         self.first_layer = nn.Sequential(
-                           nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1),
-                           nn.BatchNorm2d(stage_channels[0]),
-                           nn.ReLU()
+                           OrderedDict([
+                               ('first_layer_conv', nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1)),
+                               ('first_layer_bn', nn.BatchNorm2d(stage_channels[0])),
+                               ('first_layer_relu', nn.ReLU())
+                                       ])
                            )
 
         self.stages = []
