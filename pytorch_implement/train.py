@@ -52,12 +52,29 @@ model = Resnet50(args.stage_channels, args.in_channels,
                  args.num_classes, args.tweak_type,
                  args.num_repeat)
 model = init_net(model, args)
+if args.no_bias_decay:
+    bn_params = []
+    without_bn_params = []
+    for name, param in model.named_parameters():
+        if name.find('bn') != -1:
+            bn_params.append(param.data)
+        else:
+            without_bn_params.append(param.data)
+
+    optimizer = torch.optim.SGD([
+                                {'params': bn_params, 'weight_decay': 0},
+                                {'params': without_bn_params}
+                                ],
+                                lr=args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
+else:
+    optimizer = torch.optim.SGD(model.parameters(),
+                                lr=args.lr,
+                                momentum=args.momentum,
+                                weight_decay=args.weight_decay)
 
 loss_func = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(),
-                            lr=args.lr,
-                            momentum=args.momentum,
-                            weight_decay=args.weight_decay)
 if args.lr_warmup_type is not None:
     lr_lambda = lambda num: (num+1) / args.lr_warmup_iters if num <= args.lr_warmup_iters else args.lr_warmup_iters
     lr_scheduler_warmup = lr_scheduler.LambdaLR(optimizer, lr_lambda)

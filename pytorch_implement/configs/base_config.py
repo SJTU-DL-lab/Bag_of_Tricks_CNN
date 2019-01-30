@@ -29,6 +29,7 @@ parser.add_argument("--num_repeat", type=int, default=9, help="the repeat number
 parser.add_argument("--num_classes", type=int, default=10)
 parser.add_argument("--tweak_type", type=str, default='A')
 parser.add_argument("--zero_gamma", action='store_true')
+parser.add_argument("--no_bias_decay", action='store_true')
 parser.add_argument("--dataset", default='cifar', choices=['cifar', 'imagenet'])
 parser.add_argument("--summary_dir", type=str, default='./summary/resnet50')
 parser.add_argument("--add_stamp", action='store_true')
