@@ -62,7 +62,7 @@ if args.no_bias_decay:
             without_bn_params.append(param.data)
 
     optimizer = torch.optim.SGD([
-                                {'params': bn_params, 'weight_decay': 0},
+                                {'params': bn_params},
                                 {'params': without_bn_params}
                                 ],
                                 lr=args.lr,
