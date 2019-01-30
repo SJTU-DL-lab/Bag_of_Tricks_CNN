@@ -135,7 +135,7 @@ class LabelSmoothLoss(nn.Module):
         self.true_dist = None
 
     def forward(self, input, target):
-        assert x.size(1) == self.class_num
+        assert input.size(1) == self.class_num
         true_dist = input.clone()
         true_dist.fill_(self.smooth / (self.class_num - 1))
         true_dist.scatter_(1, target.unsqueeze(0), 1 - self.smooth)
