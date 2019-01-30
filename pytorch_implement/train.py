@@ -69,7 +69,7 @@ best_acc = 0.0
 num_iters = 1
 since = time.time()
 
-if args.lr_warmup_type == 'epoch' args.lr_decay_type == 'epoch':
+if args.lr_warmup_type == 'epoch' and args.lr_decay_type == 'epoch':
     args.epoch = args.lr_warmup_iters + args.niter
 for ep in range(args.epoch):
     print()
