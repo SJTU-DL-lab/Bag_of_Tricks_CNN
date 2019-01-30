@@ -14,16 +14,16 @@ class BuildingBlock(nn.Module):
         if downsample and tweak_type == 'A':
             self.residual = nn.Sequential(
                             OrderedDict([
-                                ('res_conv', nn.Conv2d(in_channels, out_channels, 1, 2, bias=False)),
+                                ('res_conv', nn.Conv2d(in_channels, out_channels, 1, 2)),
                                 ('res_bn', nn.BatchNorm2d(out_channels))
                                         ])
                             )
             self.build_block = nn.Sequential(
                                OrderedDict([
-                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 2, 1, bias=False)),
+                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 2, 1)),
                                    ('bn1', nn.BatchNorm2d(out_channels)),
                                    ('relu1', nn.ReLU()),
-                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=False)),
+                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1)),
                                    ('bn2', nn.BatchNorm2d(out_channels))
                                            ])
                               )
@@ -50,16 +50,16 @@ class BuildingBlock(nn.Module):
             self.residual = nn.Sequential(
                             OrderedDict([
                                 ('res_avgPool', nn.AvgPool2d(2, 2)),
-                                ('res_conv', nn.Conv2d(in_channels, out_channels, 1, 1, bias=False)),
+                                ('res_conv', nn.Conv2d(in_channels, out_channels, 1, 1)),
                                 ('res_bn', nn.BatchNorm2d(out_channels))
                                         ])
                             )
             self.build_block = nn.Sequential(
                                OrderedDict([
-                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 2, 1, bias=False)),
+                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 2, 1)),
                                    ('bn1', nn.BatchNorm2d(out_channels)),
                                    ('relu1', nn.ReLU()),
-                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=False)),
+                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1)),
                                    ('bn2', nn.BatchNorm2d(out_channels))
                                            ])
                               )
@@ -67,17 +67,17 @@ class BuildingBlock(nn.Module):
         else:
             self.residual = nn.Sequential(
                                 OrderedDict([
-                                    ('res_conv', nn.Conv2d(in_channels, out_channels, 1, bias=False)),
+                                    ('res_conv', nn.Conv2d(in_channels, out_channels, 1)),
                                     ('res_bn', nn.BatchNorm2d(out_channels))
                                             ])
                                          )
 
             self.build_block = nn.Sequential(
                                OrderedDict([
-                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 1, 1, bias=False)),
+                                   ('conv1', nn.Conv2d(in_channels, out_channels, 3, 1, 1)),
                                    ('bn1', nn.BatchNorm2d(out_channels)),
                                    ('relu1', nn.ReLU()),
-                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1, bias=False)),
+                                   ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1)),
                                    ('bn2', nn.BatchNorm2d(out_channels))
                                            ])
                               )
@@ -100,7 +100,7 @@ class Resnet50(nn.Module):
 
         self.first_layer = nn.Sequential(
                            OrderedDict([
-                               ('first_layer_conv', nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1, bias=False)),
+                               ('first_layer_conv', nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1)),
                                ('first_layer_bn', nn.BatchNorm2d(stage_channels[0])),
                                ('first_layer_relu', nn.ReLU())
                                        ])
