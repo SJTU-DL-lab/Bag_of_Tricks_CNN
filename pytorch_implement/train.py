@@ -63,7 +63,7 @@ optimizer = torch.optim.SGD(params,
                             weight_decay=args.weight_decay)
 
 if args.label_smooth:
-    loss_func = LabelSmoothLoss(args.num_classes)
+    loss_func = LabelSmoothLoss(args.num_classes, args.label_smooth_eps)
 else:
     loss_func = nn.CrossEntropyLoss()
 if args.lr_warmup_type is not None:

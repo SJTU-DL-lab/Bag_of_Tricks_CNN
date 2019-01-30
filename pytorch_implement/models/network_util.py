@@ -134,12 +134,12 @@ class LabelSmoothLoss(nn.Module):
         self.loss = nn.KLDivLoss()
         self.true_dist = None
 
-    def forward(self, input, target):
-        assert input.size(1) == self.class_num
-        true_dist = input.clone()
+    def forward(self, X, target):
+        assert X.size(1) == self.class_num
+        true_dist = X.clone()
         true_dist.fill_(self.smooth / (self.class_num - 1))
-        true_dist.scatter_(1, target.unsqueeze(0), 1 - self.smooth)
+        true_dist.scatter_(1, target.data.unsqueeze(1), 1.0 - self.smooth)
         true_dist.requires_grad_(False)
         self.true_dist = true_dist
 
-        return self.loss(input, true_dist)
+        return self.loss(X, true_dist)
