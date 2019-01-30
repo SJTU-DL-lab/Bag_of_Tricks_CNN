@@ -139,7 +139,7 @@ class LabelSmoothLoss(nn.Module):
         true_dist = X.clone()
         true_dist.fill_(self.smooth / (self.class_num - 1))
         true_dist.scatter_(1, target.data.unsqueeze(1), 1.0 - self.smooth)
-        true_dist.requires_grad_(False)
+        true_dist = true_dist.detach()
         self.true_dist = true_dist
 
         return self.loss(X, true_dist)
