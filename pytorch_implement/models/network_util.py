@@ -100,3 +100,45 @@ def add_noBiasWeightDecay(model, skip_list):
     assert len(list(model.parameters())) == (len(decay) + len(no_decay))
 
     return [{'params': no_decay, 'weight_decay': 0.0}, {'params': decay}]
+
+
+def mixup_data(x, y, alpha=1.0, use_cuda=True):
+    '''Returns mixed inputs, pairs of targets, and lambda'''
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size()[0]
+    if use_cuda:
+        index = torch.randperm(batch_size).cuda()
+    else:
+        index = torch.randperm(batch_size)
+
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+    return mixed_x, y_a, y_b, lam
+
+
+def mixup_loss(criterion, pred, y_a, y_b, lam):
+    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+
+
+class LabelSmoothLoss(nn.Module):
+
+    def __init__(self, class_num, smooth=0.0):
+        super(LabelSmoothLoss, self).__init__()
+        self.class_num = class_num
+        self.smooth = smooth
+        self.loss = nn.KLDivLoss()
+        self.true_dist = None
+
+    def forward(self, input, target):
+        assert x.size(1) == self.class_num
+        true_dist = input.clone()
+        true_dist.fill_(self.smooth / (self.class_num - 1))
+        true_dist.scatter_(1, target.unsqueeze(0), 1 - self.smooth)
+        true_dist.requires_grad_(False)
+        self.true_dist = true_dist
+
+        return self.loss(input, true_dist)

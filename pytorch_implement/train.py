@@ -12,7 +12,7 @@ import torchvision
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
 from models.resnet_cifar import Resnet50
-from models.network_util import get_scheduler, init_net, add_noBiasWeightDecay
+from models.network_util import get_scheduler, init_net, add_noBiasWeightDecay, LabelSmoothLoss, mixup_data, mixup_loss
 from tensorboardX import SummaryWriter
 from configs.base_config import args
 
@@ -62,7 +62,10 @@ optimizer = torch.optim.SGD(params,
                             momentum=args.momentum,
                             weight_decay=args.weight_decay)
 
-loss_func = nn.CrossEntropyLoss()
+if args.label_smooth:
+    loss_func = LabelSmoothLoss(args.num_classes)
+else:
+    loss_func = nn.CrossEntropyLoss()
 if args.lr_warmup_type is not None:
     lr_lambda = lambda num: (num+1) / args.lr_warmup_iters if num <= args.lr_warmup_iters else args.lr_warmup_iters
     lr_scheduler_warmup = lr_scheduler.LambdaLR(optimizer, lr_lambda)
@@ -96,11 +99,16 @@ for ep in range(args.epoch):
         for i, (X, y) in enumerate(dataloader[stage]):
             X = X.to(device)
             y = y.to(device)
+            if stage == 'train' and args.mixup_alpha > 0:
+                X, y_a, y_b, lam = mixup_data(X, y, alpha=args.mixup_alpha, use_cuda=True)
             optimizer.zero_grad()
 
             with torch.set_grad_enabled(stage == 'train'):
                 y_score = model(X)
-                loss = loss_func(y_score, y)
+                if stage == 'train' and args.mixup_alpha > 0:
+                    loss = mixup_loss(loss_func, y_score, y_a, y_b, lam)
+                else:
+                    loss = loss_func(y_score, y)
                 _, y_pred = torch.max(y_score, 1)
 
                 if stage == 'train':
@@ -111,7 +119,11 @@ for ep in range(args.epoch):
                     loss.backward()
                     optimizer.step()
 
-            step_corrects = torch.sum(y_pred == y.data)
+            if stage == 'train' and args.mixup_alpha > 0:
+                step_corrects = (lam * y_pred.eq(y_a.data).cpu().sum()
+                                 + (1 - lam) * y_pred.eq(y_b.data).cpu().sum())
+            else:
+                step_corrects = torch.sum(y_pred == y.data)
             running_loss += loss.item() * X.size(0)
             running_corrects += step_corrects
             if stage == 'train':
