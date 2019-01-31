@@ -77,8 +77,8 @@ best_acc = 0.0
 num_iters = 1
 since = time.time()
 
-if args.lr_warmup_type == 'epoch' and args.lr_decay_type == 'epoch':
-    args.epoch = args.lr_warmup_iters + args.niter
+if args.lr_warmup_type == 'epoch' and args.lr_decay_type == 'epoch' and isinstance(args.lr_decay_iters, int):
+    args.epoch = args.lr_warmup_iters + args.lr_decay_iters
 for ep in range(args.epoch):
     print()
     print("epoch {}/{}".format(ep+1, args.epoch))

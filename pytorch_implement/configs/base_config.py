@@ -21,7 +21,7 @@ parser.add_argument("--lr_warmup_type", default=None, choices=['iter', 'epoch', 
 parser.add_argument("--lr_warmup_iters", type=int, default=5)
 parser.add_argument("--lr_decay_type", default='epoch', choices=['iter', 'epoch'])
 parser.add_argument("--gpu_ids", type=str, default='0')
-parser.add_argument("--niter", type=int, default=178)
+# parser.add_argument("--niter", type=int, default=178)
 parser.add_argument("--no_shuffle", action='store_true')
 parser.add_argument("--stage_channels", default=[16, 32, 64])
 parser.add_argument("--in_channels", type=int, default=3)
@@ -53,3 +53,14 @@ for str_id in str_ids:
         args.gpu_ids.append(id)
 if len(args.gpu_ids) > 0:
     torch.cuda.set_device(args.gpu_ids[0])
+
+# get multistep decay iters
+if args.lr_decay_iters.find(',') != -1:
+    str_its = args.lr_decay_iters.split(',')
+    args.lr_decay_iters = []
+    for str_it in str_its:
+        iter = int(str_it)
+        if iter >= 0:
+            args.lr_decay_iters.append(iter)
+else:
+    args.lr_decay_iters = int(args.lr_decay_iters)
