@@ -105,6 +105,8 @@ for ep in range(args.epoch):
 
             with torch.set_grad_enabled(stage == 'train'):
                 y_score = model(X)
+                if args.label_smooth:
+                    y_score = nn.LogSoftmax(1)(y_score)
                 if stage == 'train' and args.mixup_alpha > 0:
                     loss = mixup_loss(loss_func, y_score, y_a, y_b, lam)
                 else:
@@ -120,8 +122,8 @@ for ep in range(args.epoch):
                     optimizer.step()
 
             if stage == 'train' and args.mixup_alpha > 0:
-                step_corrects = (lam * y_pred.eq(y_a.data).cpu().sum()
-                                 + (1 - lam) * y_pred.eq(y_b.data).cpu().sum())
+                step_corrects = (lam * y_pred.eq(y_a.data).cpu().sum().double()
+                                 + (1 - lam) * y_pred.eq(y_b.data).cpu().sum().double())
             else:
                 step_corrects = torch.sum(y_pred == y.data)
             running_loss += loss.item() * X.size(0)
