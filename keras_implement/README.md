@@ -10,6 +10,6 @@ Adding Learningrate WarmUp (done) accuracy:92.32% (+0.68%)
 
 Adding cosine decay(done) accuracy：93.01%（+0.69%）
 
-Adding label smooth(on progress)
+Replacing epoch-operation with batch-operation(done) accuracy:92.93%    No imporvement
 
-Replacing epoch-operation with batch-operation(on progress)
+Adding label smooth(on progress)
