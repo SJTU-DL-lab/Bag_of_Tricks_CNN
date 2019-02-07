@@ -8,6 +8,7 @@ import time
 import copy
 import os
 import pickle as pkl
+import matplotlib.pyplot as plt
 import torchvision
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
@@ -71,7 +72,8 @@ if args.lr_warmup_type is not None:
     lr_scheduler_warmup = lr_scheduler.LambdaLR(optimizer, lr_lambda)
 lr_scheduler = get_scheduler(optimizer, args)
 
-val_acc_history = []
+step_acc_history = []
+lr_history = []
 best_model_wts = copy.deepcopy(model.state_dict())
 best_acc = 0.0
 num_iters = 1
@@ -129,10 +131,14 @@ for ep in range(args.epoch):
             running_loss += loss.item() * X.size(0)
             running_corrects += step_corrects
             if stage == 'train':
+                step_acc = step_corrects.double() / args.batch_size
+                step_lr = optimizer.param_groups[0]['lr']
+                step_acc_history.append(step_acc)
+                lr_history.append(step_lr)
                 writer.add_scalar('train/running_loss', loss.item(), num_iters)
-                writer.add_scalar('train/running_acc', step_corrects.double() / args.batch_size, num_iters)
-                writer.add_scalar('train/lr', optimizer.param_groups[0]['lr'], num_iters)
-                writer.add_scalar('train/clr', step_corrects.double() / args.batch_size, optimizer.param_groups[0]['lr'])
+                writer.add_scalar('train/running_acc', step_acc, num_iters)
+                writer.add_scalar('train/lr', step_lr, num_iters)
+
                 num_iters += 1
 
         epoch_loss = running_loss / len(dataloader[stage].dataset)
@@ -145,6 +151,10 @@ for ep in range(args.epoch):
         if stage == 'test' and epoch_acc > best_acc:
             best_acc = epoch_acc
             best_model_wts = copy.deepcopy(model.state_dict())
+
+fig = plt.figure(figsize=(12, 10))
+plt.plot(step_lr, step_acc_history)
+writer.add_figure('train/clr', fig)
 
 time_elapsed = time.time() - since
 print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed // 3600, time_elapsed // 60, time_elapsed % 60))
