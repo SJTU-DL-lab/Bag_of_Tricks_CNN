@@ -155,9 +155,10 @@ for ep in range(args.epoch):
             best_acc = epoch_acc
             best_model_wts = copy.deepcopy(model.state_dict())
 
-fig = plt.figure(figsize=(12, 10))
-plt.plot(step_lr, step_acc_history)
-writer.add_figure('train/clr', fig)
+if args.lr_range_test:
+    fig = plt.figure(figsize=(12, 10))
+    plt.plot(step_lr, step_acc_history)
+    writer.add_figure('train/clr', fig)
 
 time_elapsed = time.time() - since
 print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed // 3600, time_elapsed // 60, time_elapsed % 60))
