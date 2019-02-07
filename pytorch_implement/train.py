@@ -8,7 +8,6 @@ import time
 import copy
 import os
 import pickle as pkl
-import matplotlib.pyplot as plt
 import matplotlib as mpl
 import torchvision
 from torchvision.datasets import CIFAR10
@@ -17,8 +16,10 @@ from models.resnet_cifar import Resnet50
 from models.network_util import get_scheduler, init_net, add_noBiasWeightDecay, LabelSmoothLoss, mixup_data, mixup_loss
 from tensorboardX import SummaryWriter
 from configs.base_config import args
-
 mpl.use('Agg')
+import matplotlib.pyplot as plt
+
+
 data_transform = {
     'train': transforms.Compose([
         transforms.RandomHorizontalFlip(),
