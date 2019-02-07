@@ -40,8 +40,8 @@ def get_scheduler(optimizer, opt):
         scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.lr_decay_iters, eta_min=0)
     elif opt.lr_policy == 'CLR':
         def clr_lambda(num):
-            cycle = math.floor(num / (2*opt.step_size) + 1)
-            x = abs(num / opt.step_size - 2*cycle + 1)
+            cycle = math.floor(num / (2*opt.lr_step_size) + 1)
+            x = abs(num / opt.lr_step_size - 2*cycle + 1)
             lr = opt.base_lr + (opt.max_lr - opt.base_lr) * max(0, 1-x)
             return lr
         scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=clr_lambda)
