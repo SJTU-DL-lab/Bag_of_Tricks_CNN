@@ -9,6 +9,7 @@ import copy
 import os
 import pickle as pkl
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import torchvision
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
@@ -17,6 +18,7 @@ from models.network_util import get_scheduler, init_net, add_noBiasWeightDecay, 
 from tensorboardX import SummaryWriter
 from configs.base_config import args
 
+mpl.use('Agg')
 data_transform = {
     'train': transforms.Compose([
         transforms.RandomHorizontalFlip(),
@@ -133,8 +135,9 @@ for ep in range(args.epoch):
             if stage == 'train':
                 step_acc = step_corrects.double() / args.batch_size
                 step_lr = optimizer.param_groups[0]['lr']
-                step_acc_history.append(step_acc)
-                lr_history.append(step_lr)
+                if args.lr_range_test:
+                    step_acc_history.append(step_acc)
+                    lr_history.append(step_lr)
                 writer.add_scalar('train/running_loss', loss.item(), num_iters)
                 writer.add_scalar('train/running_acc', step_acc, num_iters)
                 writer.add_scalar('train/lr', step_lr, num_iters)
