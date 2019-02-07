@@ -132,6 +132,7 @@ for ep in range(args.epoch):
                 writer.add_scalar('train/running_loss', loss.item(), num_iters)
                 writer.add_scalar('train/running_acc', step_corrects.double() / args.batch_size, num_iters)
                 writer.add_scalar('train/lr', optimizer.param_groups[0]['lr'], num_iters)
+                writer.add_scalar('train/clr', step_corrects.double() / args.batch_size, optimizer.param_groups[0]['lr'])
                 num_iters += 1
 
         epoch_loss = running_loss / len(dataloader[stage].dataset)
