@@ -23,7 +23,7 @@ parser.add_argument("--lr_decay_type", default='epoch', choices=['iter', 'epoch'
 parser.add_argument("--lr_step_size", default=1568, type=int, help='the CLR step size, 2-10 times the num of iters in one epoch would be fine, the default value is 8 times of 256 batch size of CIFAR10 dataset')
 parser.add_argument("--lr_range_test", action='store_true')
 parser.add_argument("--base_lr", default=1e-3, type=float, help='the minimum lr of the CLR')
-parser.add_argument("--max_lr", default=10, type=float, help='the maximum lr of the CLR')
+parser.add_argument("--max_lr", default=10.0, type=float, help='the maximum lr of the CLR')
 parser.add_argument("--gpu_ids", type=str, default='0')
 # parser.add_argument("--niter", type=int, default=178)
 parser.add_argument("--no_shuffle", action='store_true')

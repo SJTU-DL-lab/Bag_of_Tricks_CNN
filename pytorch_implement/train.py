@@ -106,6 +106,11 @@ for ep in range(args.epoch):
             y = y.to(device)
             if stage == 'train' and args.mixup_alpha > 0:
                 X, y_a, y_b, lam = mixup_data(X, y, alpha=args.mixup_alpha, use_cuda=True)
+            if stage == 'train':
+                if args.lr_warmup_type == 'iter' and num_iters <= args.lr_warmup_iters:
+                    lr_scheduler_warmup.step()
+                elif args.lr_decay_type == 'iter':
+                    lr_scheduler.step()
             optimizer.zero_grad()
 
             with torch.set_grad_enabled(stage == 'train'):
@@ -119,10 +124,6 @@ for ep in range(args.epoch):
                 _, y_pred = torch.max(y_score, 1)
 
                 if stage == 'train':
-                    if args.lr_warmup_type == 'iter' and num_iters <= args.lr_warmup_iters:
-                        lr_scheduler_warmup.step()
-                    elif args.lr_decay_type == 'iter':
-                        lr_scheduler.step()
                     loss.backward()
                     optimizer.step()
 
@@ -136,6 +137,7 @@ for ep in range(args.epoch):
             if stage == 'train':
                 step_acc = step_corrects.double() / args.batch_size
                 step_lr = optimizer.param_groups[0]['lr']
+
                 if args.lr_range_test:
                     step_acc_history.append(step_acc)
                     lr_history.append(step_lr)
@@ -158,7 +160,7 @@ for ep in range(args.epoch):
 
 if args.lr_range_test:
     fig = plt.figure(figsize=(12, 10))
-    plt.plot(step_lr, step_acc_history)
+    plt.plot(lr_history, step_acc_history)
     writer.add_figure('train/clr', fig)
 
 time_elapsed = time.time() - since
