@@ -1,4 +1,6 @@
 import numpy as np
+import pickle as pkl
+import math
 import torch
 import torch.nn as nn
 from torch.nn import init
@@ -36,6 +38,13 @@ def get_scheduler(optimizer, opt):
         scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, threshold=0.01, patience=5)
     elif opt.lr_policy == 'cosine':
         scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.lr_decay_iters, eta_min=0)
+    elif opt.lr_policy == 'CLR':
+        def clr_lambda(num):
+            cycle = math.floor(num / (2*opt.step_size) + 1)
+            x = abs(num / opt.step_size - 2*cycle + 1)
+            lr = opt.base_lr + (opt.max_lr - opt.base_lr) * max(0, 1-x)
+            return lr
+        scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=clr_lambda)
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)
     return scheduler
@@ -123,6 +132,13 @@ def mixup_data(x, y, alpha=1.0, use_cuda=True):
 
 def mixup_loss(criterion, pred, y_a, y_b, lam):
     return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+
+
+def load_checkpoint(checkpoint_path, model):
+    with open(checkpoint_path, 'rb') as f:
+        params = pkl.load(f)
+    model.load_state_dict(params)
+    return model
 
 
 class LabelSmoothLoss(nn.Module):
