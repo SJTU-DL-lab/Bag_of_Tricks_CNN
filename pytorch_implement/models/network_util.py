@@ -48,7 +48,7 @@ def get_scheduler(optimizer, opt):
         # scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=clr_lambda)
 
         scheduler = CyclicLR(optimizer, base_lr=opt.base_lr, max_lr=opt.max_lr,
-                             step_size=opt.lr_step_size, model=opt.clr_gamma,
+                             step_size=opt.lr_step_size, mode=opt.clr_mode,
                              gamma=opt.clr_gamma)
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)
