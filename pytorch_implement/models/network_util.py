@@ -174,7 +174,7 @@ class CyclicLR(object):
     The distance between the two boundaries can be scaled on a per-iteration
     or per-cycle basis.
     Cyclical learning rate policy changes the learning rate after every batch.
-    `batch_step` should be called after a batch has been used for training.
+    `step` should be called after a batch has been used for training.
     To resume training, save `last_batch_iteration` and use it to instantiate `CycleLR`.
     This class has three built-in policies, as put forth in the paper:
     "triangular":
@@ -224,7 +224,7 @@ class CyclicLR(object):
         >>> data_loader = torch.utils.data.DataLoader(...)
         >>> for epoch in range(10):
         >>>     for batch in data_loader:
-        >>>         scheduler.batch_step()
+        >>>         scheduler.step()
         >>>         train_batch(...)
     .. _Cyclical Learning Rates for Training Neural Networks: https://arxiv.org/abs/1506.01186
     .. _bckenstler/CLR: https://github.com/bckenstler/CLR
@@ -278,10 +278,10 @@ class CyclicLR(object):
             self.scale_fn = scale_fn
             self.scale_mode = scale_mode
 
-        self.batch_step(last_batch_iteration + 1)
+        self.step(last_batch_iteration + 1)
         self.last_batch_iteration = last_batch_iteration
 
-    def batch_step(self, batch_iteration=None):
+    def step(self, batch_iteration=None):
         if batch_iteration is None:
             batch_iteration = self.last_batch_iteration + 1
         self.last_batch_iteration = batch_iteration
