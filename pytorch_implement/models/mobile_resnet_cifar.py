@@ -24,7 +24,7 @@ class BuildingBlock(nn.Module):
         self.build_block = nn.Sequential(
                            OrderedDict([
                                ('conv1', nn.Conv2d(in_channels, hidden_channels, 1, 1, 0)),
-                               ('bn1', nn.BatchNorm2d(out_channels)),
+                               ('bn1', nn.BatchNorm2d(hidden_channels)),
                                ('relu1', nn.ReLU()),
 
                                ('conv2', nn.Conv2d(hidden_channels, hidden_channels, 3, stride, 1,
