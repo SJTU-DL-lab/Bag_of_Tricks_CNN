@@ -58,6 +58,8 @@ if args.add_stamp and not args.debug:
     time_now = datetime.datetime.now()
     time_str = '{}-{}-{}'.format(str(time_now.date()), time_now.hour, time_now.minute)
     args.summary_dir += '_{}_{}'.format(args.dataset, time_str)
+    if not os.path.exists(args.summary_dir):
+        os.mkdir(args.summary_dir)
 if args.debug:
     args.summary_dir += '_debug'
     print("WARNIBG:")
