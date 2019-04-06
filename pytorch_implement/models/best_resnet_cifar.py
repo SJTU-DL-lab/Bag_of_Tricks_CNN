@@ -10,6 +10,7 @@ class BuildingBlock(nn.Module):
                  downsample=False, tweak_type='A'):
         super(BuildingBlock, self).__init__()
         # mid_channels = in_channels // 2
+        stride = 2 if downsample else 1
         self.relu = nn.ReLU()
         self.downsample = downsample
         self.residual = nn.Sequential(
@@ -21,7 +22,7 @@ class BuildingBlock(nn.Module):
                         )
         self.build_block = nn.Sequential(
                            OrderedDict([
-                               ('conv1', nn.Conv2d(in_channels, out_channels, 3, 2, 1)),
+                               ('conv1', nn.Conv2d(in_channels, out_channels, 3, stride, 1)),
                                ('bn1', nn.BatchNorm2d(out_channels)),
                                ('relu1', nn.ReLU()),
                                ('conv2', nn.Conv2d(out_channels, out_channels, 3, 1, 1)),
