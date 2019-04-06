@@ -7,7 +7,7 @@ from collections import OrderedDict
 class BuildingBlock(nn.Module):
 
     def __init__(self, in_channels, out_channels,
-                 downsample=False, expand_ratio=6, tweak_type='A'):
+                 downsample=False, expand_ratio=3, tweak_type='A'):
         super(BuildingBlock, self).__init__()
         # mid_channels = in_channels // 2
         stride = 2 if downsample else 1
@@ -30,7 +30,7 @@ class BuildingBlock(nn.Module):
                                ('conv2', nn.Conv2d(hidden_channels, hidden_channels, 3, stride, 1,
                                                    groups=hidden_channels)),
                                ('bn2', nn.BatchNorm2d(hidden_channels)),
-                               ('relu2', nn.ReLU()),
+                               #('relu2', nn.ReLU()),
 
                                ('conv3', nn.Conv2d(hidden_channels, out_channels, 1, 1, 0)),
                                ('bn3', nn.BatchNorm2d(out_channels)),

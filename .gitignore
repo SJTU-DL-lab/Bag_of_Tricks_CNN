@@ -117,3 +117,6 @@ pytorch_implement/summary
 
 # notebook for test
 pytorch_implement/notebook
+
+# nohup
+nohup.out

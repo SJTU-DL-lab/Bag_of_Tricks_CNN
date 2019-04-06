@@ -4,22 +4,41 @@ from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader
 import sys
 import datetime
+import logging
 import time
 import copy
 import os
 import pickle as pkl
 import matplotlib as mpl
+mpl.use('Agg')
 import torchvision
 from torchvision.datasets import CIFAR10
 import torchvision.transforms as transforms
 # from models.resnet_cifar import Resnet50
-from models.best_resnet_cifar import Resnet50
+# from models.best_resnet_cifar import Resnet50
+from models.mobile_resnet_cifar import Resnet50
 from models.network_util import get_scheduler, init_net, add_noBiasWeightDecay, LabelSmoothLoss, mixup_data, mixup_loss
 from tensorboardX import SummaryWriter
 from configs.base_config import args
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(os.path.join(args.summary_dir, "log.txt"))
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+console = logging.StreamHandler(sys.stdout)
+logger.addHandler(console)
+logger.info("logger start")
+
+writer = SummaryWriter(log_dir=args.summary_dir)
+model_tempsav_dir = os.path.join(args.summary_dir, 'model_history')
+if not os.path.exists(model_tempsav_dir):
+    os.mkdir(model_tempsav_dir)
+with open(os.path.join(args.summary_dir, 'args.pkl'), 'wb') as f:
+    pkl.dump(args, f)
 
 data_transform = {
     'train': transforms.Compose([
@@ -43,14 +62,12 @@ dataset = {
                     transform=data_transform['test'],
                     download=True)
     }
-
+if args.debug:
+    dataset['train'].train_data = dataset['train'].train_data[:2000]
+    dataset['test'].test_data = dataset['test'].test_data[:500]
 dataloader = {x: DataLoader(dataset[x],
                             batch_size=args.batch_size,
                             shuffle=~args.no_shuffle) for x in ['train', 'test']}
-
-writer = SummaryWriter(log_dir=args.summary_dir)
-with open(os.path.join(args.summary_dir, 'args.pkl'), 'wb') as f:
-    pkl.dump(args, f)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Resnet50(args.stage_channels, args.in_channels,
@@ -86,9 +103,9 @@ since = time.time()
 if args.lr_warmup_type == 'epoch' and args.lr_decay_type == 'epoch' and isinstance(args.lr_decay_iters, int):
     args.epoch = args.lr_warmup_iters + args.lr_decay_iters
 for ep in range(args.epoch):
-    print()
-    print("epoch {}/{}".format(ep+1, args.epoch))
-    print("-" * 10)
+    logger.info('')
+    logger.info("epoch {}/{}".format(ep+1, args.epoch))
+    logger.info("-" * 10)
     if args.lr_warmup_type == 'epoch' and ep < args.lr_warmup_iters:
         lr_scheduler_warmup.step()
     elif args.lr_decay_type == 'epoch':
@@ -153,11 +170,16 @@ for ep in range(args.epoch):
         writer.add_scalar('{}/epoch_loss'.format(stage), epoch_loss, ep+1)
         writer.add_scalar('{}/epoch_acc'.format(stage), epoch_acc, ep+1)
 
-        print('{} Loss: {:.4f}, acc: {:.4f}'.format(stage, epoch_loss, epoch_acc))
+        logger.info('{} Loss: {:.4f}, acc: {:.4f}'.format(stage, epoch_loss, epoch_acc))
 
         if stage == 'test' and epoch_acc > best_acc:
             best_acc = epoch_acc
             best_model_wts = copy.deepcopy(model.state_dict())
+        if stage == 'test' and (ep+1) % args.save_epochs == 0:
+            logger.info("-"*10 + "Save current model weights" + "-"*10)
+            model_wts = copy.deepcopy(model.state_dict())
+            with open(os.path.join(model_tempsav_dir, 'model_epoch{}_ValACC{:.3f}.pkl'.format(ep+1, epoch_acc)), 'wb') as f:
+                pkl.dump(model_wts, f)
 
 if args.lr_range_test:
     fig = plt.figure(figsize=(12, 10))
@@ -165,8 +187,8 @@ if args.lr_range_test:
     writer.add_figure('train/clr', fig)
 
 time_elapsed = time.time() - since
-print('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed // 3600, time_elapsed // 60, time_elapsed % 60))
-print('Best val Acc: {:4f}'.format(best_acc))
+logger.info('Training complete in {:.0f}h {:.0f}m {:.0f}s'.format(time_elapsed // 3600, time_elapsed // 60, time_elapsed % 60))
+logger.info('Best val Acc: {:4f}'.format(best_acc))
 
 with open(os.path.join(args.summary_dir, 'model_bestValACC_{:.3f}.pkl'.format(best_acc)), 'wb') as f:
     pkl.dump(best_model_wts, f)
