@@ -52,9 +52,10 @@ class Resnet50(nn.Module):
 
     def __init__(self, stage_channels=[16, 32, 64],
                  in_channels=3, num_classes=10, tweak_type='A',
-                 num_repeat=9):
+                 num_repeat=9, expand_ratio=3):
         super(Resnet50, self).__init__()
 
+        self.expand_ratio = expand_ratio
         self.first_layer = nn.Sequential(
                            OrderedDict([
                                ('first_layer_conv', nn.Conv2d(in_channels, stage_channels[0], 3, 1, 1)),
@@ -72,7 +73,7 @@ class Resnet50(nn.Module):
             else:
                 downsample = True
             self.stages += self.stage_block(BuildingBlock, stage_channels[i],
-                                            stage_channels[i+1], num_repeat, downsample,
+                                            stage_channels[i+1], num_repeat, expand_ratio, downsample,
                                             tweak_type)
 
         self.stages = nn.Sequential(*self.stages)
@@ -81,10 +82,11 @@ class Resnet50(nn.Module):
         self.fc = nn.Linear(stage_channels[-1], num_classes)
 
     def stage_block(self, model_block, in_channels, out_channels,
-                    num_repeat, downsample=True, tweak_type='A'):
-        stage = [model_block(in_channels, out_channels, downsample=downsample, tweak_type=tweak_type)]
+                    num_repeat, expand_ratio, downsample=True, tweak_type='A'):
+        stage = [model_block(in_channels, out_channels, downsample=downsample, tweak_type=tweak_type,
+                             expand_ratio=expand_ratio)]
         for i in range(num_repeat - 1):
-            stage += [model_block(out_channels, out_channels, tweak_type=tweak_type)]
+            stage += [model_block(out_channels, out_channels, tweak_type=tweak_type, expand_ratio=expand_ratio)]
 
         return stage
 

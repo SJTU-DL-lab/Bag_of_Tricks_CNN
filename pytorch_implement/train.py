@@ -72,7 +72,7 @@ dataloader = {x: DataLoader(dataset[x],
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 model = Resnet50(args.stage_channels, args.in_channels,
                  args.num_classes, args.tweak_type,
-                 args.num_repeat)
+                 args.num_repeat, expand_ratio=args.expand_ratio)
 model = init_net(model, args)
 if args.no_bias_decay:
     params = add_noBiasWeightDecay(model, ['bn'])
