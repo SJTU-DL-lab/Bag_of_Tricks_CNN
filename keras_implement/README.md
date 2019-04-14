@@ -5,6 +5,14 @@ Paper：https://arxiv.org/abs/1812.01187
 
 Resnet model and other CNN models implemented by keras can be found from: https://github.com/BIGBALLON/cifar-10-cnn
 
+*basenet_resnet.py: baseline*
+
+*cosine_batch.py: adapt lr by batch you can custome your own lr stradegy according to the demo*
+
+*mix_generator.py: mix up*
+
+*resnet110.py: the final training code*
+
 Train baseline Resnet32 model （done)  accuracy: 91.64%
 
 Adding warmup LR (done) accracy:92.32%(+0.68%)
