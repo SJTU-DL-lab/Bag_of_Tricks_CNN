@@ -1,15 +1,22 @@
-Implemented by Keras
+# tricks-in-deeplearning
+Using different tricks to improve performance of resetnet by Keras
 
-Resnet:https://arxiv.org/abs/1812.01187
+Paper：https://arxiv.org/abs/1812.01187
 
-More CNN models implemented by keras for cifar could be found from https://github.com/BIGBALLON/cifar-10-cnn
+Resnet model and other CNN models implemented by keras can be found from: https://github.com/BIGBALLON/cifar-10-cnn
 
-Train base line Resnet model (done) accuracy: 91.64%
+Train baseline Resnet32 model （done)  accuracy: 91.64%
 
-Adding Learningrate WarmUp (done) accuracy:92.32% (+0.68%)
+Adding warmup LR (done) accracy:92.32%(+0.68%)
 
-Adding cosine decay(done) accuracy：93.01%（+0.69%）
+Adding cosine decay（done) accuracy:93.01%（+0.69%）
 
-Replacing epoch-operation with batch-operation(done) accuracy:92.93%    No imporvement
+Adding cosine decay based on batch (done). But it does not improve for accuracy:92.93%
 
-Adding label smooth(on progress)
+Adding mixup(done) accuracy:94.10%(+1.09%)
+
+I tried label smoothing but it does not improve. According to https://www.researchgate.net/publication/327004087_Empirical_study_on_label_smoothing_in_neural_networks, label smoothing is not suitable for cifar 10.
+
+Using smaller batch size :accuracy 94.38%(+0.28%)
+
+Using resnet110: accuracy 95.21%(+0.83%)
